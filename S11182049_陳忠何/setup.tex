@@ -1,0 +1,81 @@
+\usepackage{graphicx}
+\usepackage[UTF8,heading = true]{ctex}
+\usepackage{xeCJK}
+\usepackage{shorttoc}
+\usepackage[hidelinks, linkcolor=black, colorlinks=true, urlcolor=blue, citecolor=black]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{geometry}
+\usepackage{atbegshi}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{tabularray}
+\usepackage{array}
+\usepackage{fontspec}
+% 插入多頁PDF
+\usepackage{pdfpages}
+% Wrapping text around figures
+\usepackage{wrapfig}
+% 解除浮動
+\usepackage{placeins} 
+\usepackage{appendix}
+% 讓參考文獻出現在目錄
+\usepackage[nottoc,numbib]{tocbibind}
+
+
+\makeatletter
+\AtBeginDocument{\let\book@l@chapter\l@chapter}
+\newcommand{\demotechaptersintoc}{%
+  \addtocontents{toc}{\let\protect\l@chapter\protect\l@section}%
+}
+\newcommand{\promotechaptersintoc}{%
+  \addtocontents{toc}{\let\protect\l@chapter\protect\book@l@chapter}%
+}
+% 把目錄的Appendices改成中文
+\renewcommand\appendixtocname{附錄}
+
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3} 
+
+\geometry{a4paper, margin=2cm}
+
+\setCJKmainfont[AutoFakeBold=3]{TW-Kai}
+% \setCJKmainfont{Noto Sans CJK TC}
+\setmainfont{Times New Roman}
+
+\XeTeXlinebreaklocale "zh"             
+\XeTeXlinebreakskip = 0pt plus 1pt
+\ctexset{
+    contentsname = 目錄,
+    listfigurename = 圖目錄,
+    listtablename = 表目錄,
+    figurename = 圖,
+    tablename = 表,
+    appendixname = ,
+}
+\renewcommand{\figureautorefname}{圖}
+\renewcommand{\appendixautorefname}{附錄}
+
+% 將長表格跨頁時的文字改成中文
+\DefTblrTemplate{contfoot-text}{chs}{接下頁\dots}
+\SetTblrTemplate{contfoot-text}{chs}
+\DefTblrTemplate{conthead-text}{chs}{(續表)}
+\SetTblrTemplate{conthead-text}{chs}
+
+% 設定header, footer
+\pagestyle{fancy}
+\fancyhead{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead[R]{\footnotesize \parbox[t]{\textwidth}{
+\raggedleft 人工智慧作業v1.5 \\ Date: 2024/11/04}}
+
+\fancyfoot[C]{\thepage}
+
+\fancypagestyle{plain}{
+% 重新定義 plain 頁面樣式，在chapter開始也會顯示
+  \fancyhf{} 
+  \fancyhead[R]{\footnotesize \parbox[t]{\textwidth}{
+  \raggedleft 人工智慧作業v1.5 \\ Date: 2024/11/04}} 
+  
+  \fancyfoot[C]{\thepage}
+}
+

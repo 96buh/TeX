@@ -1,0 +1,56 @@
+% 產生知識圖的命令
+% 圖片路徑，圖片名稱，圖片標籤，評分，優點，缺點
+% 最後一個參數是 圖片寬度
+\newcommand{\knowledgeGraph}[7]{
+    \begin{figure}[htbp!]
+        \centering
+        \fbox{
+            \begin{minipage}{0.9\linewidth}
+                \centering
+                \begin{minipage}{#7 \linewidth} % 固定圖片寬度
+                    \includegraphics[width=\linewidth]{#1}
+                \end{minipage}
+                \caption{#2}
+                \label{#3}
+                \vspace{5pt}
+                \hrule
+                \vspace{5pt}
+                \textbf{評分(1/10): #4} \\
+                \raggedright
+                \hangindent=3em
+                \textbf{優點:} \\
+                    \begin{enumerate}[itemsep=0.01pt]
+                      #5
+                    \end{enumerate}
+                \textbf{缺點:} \\
+                    \begin{enumerate}[itemsep=0.01pt]
+                      #6
+                    \end{enumerate}
+                \vspace{5pt}
+            \end{minipage}
+        }
+    \end{figure}
+}
+
+% 產生知識圖的命令
+% 圖片路徑，圖片名稱，圖片標籤，評分，優點，缺點
+% 最後一個參數是 圖片寬度
+
+\newcommand{\textRightGraphLeft}[7]{
+    \begin{figure}[htbp!]
+        \centering
+        \fbox{
+            \noindent\begin{minipage}{#7\textwidth}% adapt widths of minipages to your needs
+                \includegraphics[width=\linewidth]{#1}
+                \caption{#2}
+                \label{#3}
+            \end{minipage}%
+            \hfill%
+            \begin{minipage}{0.5\textwidth}\raggedright
+                \textbf{評分 (1/10): #4}\\
+                \textbf{優點:} #5\\
+                \textbf{缺點:} #6\\
+            \end{minipage}
+        }
+    \end{figure}
+}

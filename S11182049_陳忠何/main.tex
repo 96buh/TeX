@@ -1,0 +1,43 @@
+\documentclass[oneside, 12pt]{book}
+
+\input{myCommands}
+\input{setup}
+
+% 正文區
+\begin{document}
+\input{cover}
+% 前言
+\frontmatter
+\input{toc}
+% % 主要內容
+\mainmatter
+
+\include{w2}
+\include{w3}
+\include{w4}
+\include{w4-2}
+\include{w5-1}
+\include{w6-1}
+\include{QuantumAI}
+
+
+\backmatter
+% 參考文獻
+\include{references}
+% 附錄
+
+\cleardoublepage
+\appendix
+\addappheadtotoc
+\demotechaptersintoc
+    \input{appendix}
+\cleardoublepage
+\promotechaptersintoc
+% 致謝
+
+\addcontentsline{toc}{chapter}{致謝} % 手動加入目錄
+\include{acknowledgements}
+
+
+
+\end{document}
