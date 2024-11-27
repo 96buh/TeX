@@ -1,0 +1,283 @@
+% 演化式計算
+\chapter{演化式計算和PSO}
+\section{Genetic Algorithm}
+基因演算法(Genetic Algorithm)是一種啟發式演算法，用於求解複雜的優化問題或尋找接近最佳解的近似解。他會模仿自然界生物的進化過程，包括遺傳、突變、交配（重組）和自然選擇等機制。這些特性使得 GA 能夠在大規模搜索空間中高效地進行全局搜尋。
+\subsection{步驟}
+\begin{enumerate}
+    \item 初始化 \\
+        先隨機產生一組初始解，稱為種族族群(Population)。每個解稱為個體(Individual)，每個個體都有一組編碼稱為基因(Gene)。
+    \item 適應度函數(Fitness Function) \\
+        定義一個函數來評估每個個體的好壞，稱為適應度（Fitness）。適應度值反映了該解在問題中接近最佳解的程度。
+    \item 選擇(Selection) \\
+        擇出一些適應度較高的個體作為父代，使用方法包括輪盤賭選擇（Roulette Wheel Selection）或錦標賽選擇（Tournament Selection）。
+    \item 交配(Crossover) \\
+        將選中的父代進行基因重組，生成新的子代個體。常見交叉方式包括單點交叉（Single-point Crossover）和多點交叉（Multi-point Crossover）。
+    \item 突變(Mutation) \\
+        根據突變率(Mutation rate)隨機改變某些基因的值，以保持種群的多樣性並避免陷入局部最優。突變的概率通常較低。
+    \item 重複 \\
+        重複進行選擇、交配和突變，直到達到停止條件（如達到最大迭代次數或適應度達到某個閾值）。
+
+% 流程圖 -------------------
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[node distance=3cm, auto, >=stealth, 
+  every node/.style={draw, align=center, font=\footnotesize, minimum height=1cm, text centered, fill=gray!10}]
+
+% 定義節點樣式
+\tikzstyle{process} = [rectangle, rounded corners, minimum width=3cm, fill=gray!10]
+\tikzstyle{decision} = [diamond, aspect=2, minimum width=3cm, fill=gray!20]
+\tikzstyle{arrow} = [thick,->, >=stealth]
+
+% 節點
+\node (start) [process] {開始};
+\node (init) [process, right of=start, xshift=0.5cm] {初始化種群};
+\node (fitness1) [process, right of=init, xshift=0.5cm] {適應度評估};
+\node (selection) [process, right of=fitness1, xshift=0.5cm] {選擇};
+\node (crossover) [process, right of=selection, xshift=0.5cm] {交配 (Crossover)};
+\node (mutation) [process, below of=crossover, yshift=1cm] {變異 (Mutation)};
+\node (fitness2) [process, below of=mutation, yshift=1cm] {適應度評估 (新一代)};
+\node (nextgen) [process, left of=fitness2, xshift=-1.2cm] {選擇下一代};
+\node (decision) [decision, left of=nextgen, xshift=-1.5cm] {是否滿足終止條件?};
+\node (output) [process, left of=decision, xshift=-2.25cm] {輸出最優解};
+
+% 連接箭頭
+\draw [arrow] (start) -- (init);
+\draw [arrow] (init) -- (fitness1);
+\draw [arrow] (fitness1) -- (selection);
+\draw [arrow] (selection) -- (crossover);
+\draw [arrow] (crossover) -- (mutation);
+\draw [arrow] (mutation) -- (fitness2);
+\draw [arrow] (fitness2) -- (nextgen);
+\draw [arrow] (nextgen) -- (decision);
+\draw [arrow] (decision) -- ++(0, 2) node[midway, text=black, draw=none, fill=none]{否} -| (selection);
+\draw [arrow] (decision) -- node[draw=none, fill=none, anchor=south] {是} (output);
+
+\end{tikzpicture}
+\caption{遺傳演算法流程圖}
+\label{fig:GA_flowchart}
+\end{figure}
+% --------------------------
+\end{enumerate}
+\subsection{選擇方式}
+\subsubsection{Roulette Wheel Selection}
+個體被選中的概率與其適應度成正比，因此適應度越高的個體被選中的可能性越大。
+其中f(i)是第i個個體的適應度，N是種群大小。加總起來得到適應度總和S。
+\begin{equation} \label{eq:RouletteWheelSelection}
+    S = \sum_{i=1}^{N}f(i)
+\end{equation}
+每個個體被選重的機率為
+\begin{equation}
+    P(i) = \frac{f(i)}{S}
+\end{equation}
+生成隨機數$r \in [0,1)$， 根據累積分佈選擇對應的個體。重複直到選擇出所需數量的個體。
+\subsubsection{Tournament Selection}
+該方法不直接依賴適應度比例，而是通過隨機競爭進行選擇。以下是選擇步驟:
+\begin{enumerate}
+    \item \textbf{隨機選取子集：}從種群中隨機選擇 kk 個個體（通常稱為子集或比賽參賽者）， kk 通常為 2 或 3。
+    \item \textbf{比較適應度：}在子集中選擇適應度最高的個體作為比賽的「贏家」。
+    \item \textbf{重複選擇：}重複上述過程，直到選擇出所需數量的個體。
+\end{enumerate}
+
+\subsection{交配方式}
+\subsubsection{Single-point Crossover}
+選擇在父代基因串中的一個位置作為交叉點，並交換兩個父代基因串在該位置的後部分來生成兩個新的子代。
+\begin{enumerate}
+    \item \textbf{選擇交叉點：}在父代基因串中隨機選擇一個交叉點（假設是第i位）。
+    \item \textbf{交換基因：}將父代1的基因從交叉點 i 之後的部分與父代2的基因從交叉點 i 之後的部分互換。
+    \item \textbf{生成子代：}由此生成兩個子代個體，每個子代基因的前半部分來自一個父代，後半部分來自另一個父代。
+\end{enumerate}
+\subsubsection{Multi-point Crossover}
+多點交叉是單點交叉的擴展，它在基因串中選擇多個交叉點，並在這些點之間交換基因段。這樣做的目的是進一步增加基因組合的多樣性。
+\begin{enumerate}
+    \item \textbf{選擇多個交叉點：}在基因串中隨機選擇 kk 個交叉點（通常為 2 或 3 個）。
+    \item \textbf{交換基因段：}將每個父代的基因段在交叉點之間進行交換。交換的區段不再是單一位置之後的基因，而是跨越多個區域。
+    \item \textbf{生成子代：}根據選定的交叉點及交換規則生成兩個子代。
+\end{enumerate}
+
+
+
+\subsection{GA程式範例}
+以下程式碼使用Genetic Algorithm來尋找一個與目標字符串"HELLO"相符的字串。
+\begin{minted}[linenos, breaklines]{python}
+import random
+
+# 目標字符串
+TARGET = "HELLO"
+POPULATION_SIZE = 100
+MUTATION_RATE = 0.01
+GENERATIONS = 1000
+
+# 隨機生成一個字符串
+def random_string(length):
+    return ''.join(random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ ') for _ in range(length))
+
+# 計算適應度：目標字符串與當前字符串相符的字符數
+def fitness(individual):
+    return sum(1 for a, b in zip(individual, TARGET) if a == b)
+
+# 選擇：輪盤選擇法
+def select(population):
+    total_fitness = sum(fitness(ind) for ind in population)
+    pick = random.uniform(0, total_fitness)
+    current = 0
+    for individual in population:
+        current += fitness(individual)
+        if current > pick:
+            return individual
+
+# 交配：單點
+def crossover(parent1, parent2):
+    point = random.randint(1, len(parent1) - 1)
+    child = parent1[:point] + parent2[point:]
+    return child
+
+# 突變：以一定機率隨機改變基因
+def mutate(individual):
+    return ''.join(
+        char if random.random() > MUTATION_RATE else random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ ')
+        for char in individual
+    )
+
+def genetic_algorithm():
+    # 初始化種群
+    population = [random_string(len(TARGET)) for _ in range(POPULATION_SIZE)]
+    for generation in range(GENERATIONS):
+        # 計算當前最優解
+        best_individual = max(population, key=fitness)
+        if fitness(best_individual) == len(TARGET):
+            print(f"Generation {generation}: Found solution -> {best_individual}")
+            return
+        print(f"Generation {generation}: Best -> {best_individual}, Fitness -> {fitness(best_individual)}")
+        
+        # 新一代種群
+        new_population = []
+        for _ in range(POPULATION_SIZE):
+            parent1 = select(population)
+            parent2 = select(population)
+            child = crossover(parent1, parent2)
+            child = mutate(child)
+            new_population.append(child)
+        population = new_population
+    print("No solution found.")
+
+# 執行基因演算法
+genetic_algorithm()
+\end{minted}
+
+\section{粒子群優化演算法}
+粒子群優化演算法(Particle Swarm Optimization, PSO)是一種基於群體智慧的隨機優化方法，模仿了鳥群或魚群在尋找食物時的群體行為。通過模擬個體(粒子)在搜索空間中的運動，來尋找問題的最優解。PSO 是一種啟發式全局優化算法，它並不需要了解問題的具體數學模型，而是通過群體中粒子的協同合作來達到全局最優解。
+\subsection{基本原理}
+在PSO中，每個粒子具有以下屬性:
+\begin{itemize}
+    \item 位置(Position):表示粒子在解空間中的位置，對應一個解。
+    \item 速度(Velocity):表示粒子在解空間中的移動速度。
+    \item 個體最優解(Personal Best, $p_{best}$​):粒子在搜索過程中找到的最好的解。
+    \item 全局最優解(Global Best, $g_{best}$):整個粒子群中所有粒子找到的最好的解。
+\end{itemize}
+
+\subsubsection{向量更新方程式}
+速度向量更新方程式如下，其中$c_1$, $c_2$為學習因子，$r_1$, $r_2$為隨機數，$w$為慣性權重。
+\begin{equation} \label{eq:PSO_velocity}
+    v_{i}^{(t+1)} = w \cdot v_{i}^{(t)} + c_{1}r_{1}(p_{best}, i - x_{i}^{(t)}) + c_{2}r_{2}(g_{best} - x_{i}^{(t)})
+\end{equation}
+粒子位置的更新方程式如下:
+\begin{equation} \label{eq:PSO_position}
+    x_{i}^{(t+1)} = x_{i}^{(t)} + v_{i}^{(t+1)}
+\end{equation}
+
+\subsubsection{收斂條件}
+\begin{enumerate}
+    \item 最大迭代次數：當算法達到預設的最大迭代次數時，停止算法。這是最常見的收斂條件。
+    \item 適應度值變化極小：如果在多次迭代中，最佳粒子的適應度值變化非常小，說明已經接近最優解，可以停止算法。
+    \item 群體適應度收斂：當粒子群的適應度值接近穩定，且無法再找到更好的解時，視為收斂。
+\end{enumerate}
+
+
+\subsection{PSO步驟}
+\begin{enumerate}
+    \item \textbf{初始化：}初始化粒子的位置和速度，通常隨機分配。每個粒子的個體最優解設為初始位置，並計算其適應度。
+    \item \textbf{更新粒子位置和速度：}根據速度更新公式和位置更新公式，更新每個粒子的位置和速度。
+    \item \textbf{更新個體最優解：}如果某個粒子的新位置比它的個體最優解更好，則更新它的個體最優解。
+    \item \textbf{更新全局最優解：}檢查所有粒子的個體最優解，選擇最好的解作為全局最優解。
+    \item \textbf{重複運算：}重複步驟 2 至 4，直到達到終止條件(如最大迭代次數或達到所需的最佳解)。
+\end{enumerate}
+
+\subsection{PSO程式範例}
+以下使用PSO用於求解一個簡單的最小化函數問題，目標是找到函數$f(x,y) = x^2 + y^2$的最小值。
+
+\begin{minted}[linenos, breaklines]{python}
+import random
+
+# 定義目標函數
+def objective_function(position):
+    x, y = position
+    return x**2 + y**2  # 最小化目標函數
+
+# 粒子類別
+class Particle:
+    def __init__(self, bounds):
+        self.position = [random.uniform(bound[0], bound[1]) for bound in bounds]  # 初始化位置
+        self.velocity = [random.uniform(-1, 1) for _ in bounds]  # 初始化速度
+        self.best_position = self.position[:]  # 個體最佳位置
+        self.best_value = objective_function(self.position)  # 個體最佳適應值
+        self.value = self.best_value  # 當前適應值
+
+    def update_velocity(self, global_best, w, c1, c2):
+        for i in range(len(self.position)):
+            r1 = random.random()
+            r2 = random.random()
+            cognitive = c1 * r1 * (self.best_position[i] - self.position[i])
+            social = c2 * r2 * (global_best[i] - self.position[i])
+            self.velocity[i] = w * self.velocity[i] + cognitive + social
+
+    def update_position(self, bounds):
+        for i in range(len(self.position)):
+            self.position[i] += self.velocity[i]
+            # 限制位置在邊界內
+            if self.position[i] < bounds[i][0]:
+                self.position[i] = bounds[i][0]
+            if self.position[i] > bounds[i][1]:
+                self.position[i] = bounds[i][1]
+
+# PSO 主函數
+def particle_swarm_optimization(bounds, num_particles, max_iterations, w, c1, c2):
+    # 初始化粒子群
+    particles = [Particle(bounds) for _ in range(num_particles)]
+    global_best_position = None
+    global_best_value = float('inf')
+
+    for iteration in range(max_iterations):
+        for particle in particles:
+            # 更新粒子適應值
+            particle.value = objective_function(particle.position)
+            # 更新個體最佳
+            if particle.value < particle.best_value:
+                particle.best_value = particle.value
+                particle.best_position = particle.position[:]
+            # 更新全局最佳
+            if particle.value < global_best_value:
+                global_best_value = particle.value
+                global_best_position = particle.position[:]
+
+        # 更新粒子的速度與位置
+        for particle in particles:
+            particle.update_velocity(global_best_position, w, c1, c2)
+            particle.update_position(bounds)
+
+        # 當前代數的結果
+        print(f"Iteration {iteration + 1}: Best Value -> {global_best_value}, Best Position -> {global_best_position}")
+
+    return global_best_position, global_best_value
+
+# 參數設置
+bounds = [(-10, 10), (-10, 10)]  # x 和 y 的範圍
+num_particles = 30  # 粒子數
+max_iterations = 100  # 最大迭代次數
+w = 0.5  # 慣性因子
+c1 = 1.5  
+c2 = 1.5  
+
+# 執行PSO
+best_position, best_value = particle_swarm_optimization(bounds, num_particles, max_iterations, w, c1, c2)
+print(f"Optimal Solution: Position -> {best_position}, Value -> {best_value}")
+\end{minted}
