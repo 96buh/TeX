@@ -1,5 +1,5 @@
 % 演化式計算
-\chapter{演化式計算和PSO}
+\chapter{演化式計算}
 \section{Genetic Algorithm}
 基因演算法(Genetic Algorithm)是一種啟發式演算法，用於求解複雜的優化問題或尋找接近最佳解的近似解。他會模仿自然界生物的進化過程，包括遺傳、突變、交配（重組）和自然選擇等機制。這些特性使得 GA 能夠在大規模搜索空間中高效地進行全局搜尋。
 \subsection{步驟}
@@ -73,7 +73,7 @@
 \subsubsection{Tournament Selection}
 該方法不直接依賴適應度比例，而是通過隨機競爭進行選擇。以下是選擇步驟:
 \begin{enumerate}
-    \item \textbf{隨機選取子集：}從種群中隨機選擇 kk 個個體（通常稱為子集或比賽參賽者）， kk 通常為 2 或 3。
+    \item \textbf{隨機選取子集：}從種群中隨機選擇k個個體（通常稱為子集或比賽參賽者），k通常為 2 或 3。
     \item \textbf{比較適應度：}在子集中選擇適應度最高的個體作為比賽的「贏家」。
     \item \textbf{重複選擇：}重複上述過程，直到選擇出所需數量的個體。
 \end{enumerate}
@@ -164,7 +164,7 @@ def genetic_algorithm():
 genetic_algorithm()
 \end{minted}
 
-\section{粒子群優化演算法}
+\section{粒子群優化演算法(PSO)}
 粒子群優化演算法(Particle Swarm Optimization, PSO)是一種基於群體智慧的隨機優化方法，模仿了鳥群或魚群在尋找食物時的群體行為。通過模擬個體(粒子)在搜索空間中的運動，來尋找問題的最優解。PSO 是一種啟發式全局優化算法，它並不需要了解問題的具體數學模型，而是通過群體中粒子的協同合作來達到全局最優解。
 \subsection{基本原理}
 在PSO中，每個粒子具有以下屬性:
@@ -280,4 +280,122 @@ c2 = 1.5
 # 執行PSO
 best_position, best_value = particle_swarm_optimization(bounds, num_particles, max_iterations, w, c1, c2)
 print(f"Optimal Solution: Position -> {best_position}, Value -> {best_value}")
+\end{minted}
+
+\section{螞蟻演算法}
+螞蟻（蟻群）演算法（Ant Colony Optimization, ACO）是一種基於自然界中螞蟻覓食行為的啟發式演算法，常用於解決組合優化問題，例如車輛路徑問題、分配問題以及網路路由問題。
+
+\subsection{原理}
+螞蟻在覓食過程中，會在地面留下費洛蒙（pheromone）作為行動的記號。這些費洛蒙的濃度影響其他螞蟻選擇路徑的機率。螞蟻會偏向選擇費洛蒙濃度較高的路徑，並且隨著時間更新費洛蒙濃度，以增強優良路徑的吸引力。這種行為具有正反饋的特性，能夠逐漸形成優化的解。
+\subsection{數學模型}
+\subsubsection{選擇}
+螞蟻演算法的核心思想來自於螞蟻群體在覓食過程中的自然行為。在演算法中，這種現象被模擬為機率模型，人工螞蟻選擇下一節點的機率為
+\begin{equation} \label{eq:ACO_probability}
+    p^{k}_{xy} = \frac{(\tau^{\alpha}_{xy}) (\eta^{\beta}_{xy})}{\sum_{z \in allowed_{y}} (\tau^{\alpha}_{xz}) (\eta^{\beta}_{xz})}
+\end{equation}
+$\tau_{xy}$ 表示費洛蒙濃度,$\eta_{xy}$ 是該路徑的啟發式信息，當$\alpha$增加時，螞蟻更傾向於選擇費洛蒙濃度高的路徑;當$\beta$增大時，啟發式信息的作用變得更為重要，路徑的物理屬性如距離對螞蟻的行動產生更大的影響。
+\subsubsection{費洛蒙更新}
+當螞蟻完成一次路徑構建後，演算法會根據路徑的優劣更新費洛蒙濃度。費洛蒙更新的數學公式如下：
+\begin{equation} \label{eq:ACO_update}
+   \tau_{xy} \leftarrow (1-\rho)\tau_{xy} + \sum_{k}^{m} \Delta \tau^{k}_{xy}
+\end{equation}
+$\tau_{xy}$是沉積的費洛蒙量，$\rho$是費洛蒙蒸發係數。第二項中的m為螞蟻數量，$\Delta \tau^{k}_{xy}$是第k隻螞蟻沉積的費洛蒙量。而費洛蒙量可以由以下公式得到:
+\begin{equation} \label{eq:ACO_delta}
+    \Delta \tau^{k}_{xy} = 
+        \begin{cases}
+        Q / L_k & ,\text{如果螞蟻 k 經過路徑xy} \\
+        0 & ,\text{否則} \\
+        \end{cases}
+\end{equation}
+Q是費洛蒙的總量參數，而$L_k$是螞蟻k所找到路徑的總長度（成本）。路徑越短，新增的費洛蒙濃度越高，從而更可能吸引後續的螞蟻選擇該路徑。
+\subsection{步驟和程式碼}
+以下問題假設有 5 個城市（標號為 0 到 4），每個城市之間有距離，目標是找到一條最短的巡迴路徑，並使每個城市只訪問一次。，ACO演算法的步驟如下:
+\begin{enumerate}
+    \item  \textbf{初始化：}設置螞蟻數量、信息素初始值、蒸發率、啟發函數等。
+    \item  \textbf{構造解：}每隻螞蟻根據信息素濃度和距離（啟發函數）選擇下一個城市。
+    \item  \textbf{更新信息素：}根據每隻螞蟻的解質量，更新城市之間的路徑信息素。
+    \item  \textbf{信息素蒸發：}每次迭代後，所有路徑的信息素會蒸發，減少舊路徑的影響。
+\end{enumerate}
+
+\begin{minted}[linenos, breaklines]{python}
+import numpy as np
+import random
+
+# 城市數量及距離矩陣（這裡假設是隨機生成的）
+n_cities = 5
+distance_matrix = np.random.randint(10, 100, size=(n_cities, n_cities))
+np.fill_diagonal(distance_matrix, 0)  # 將對角線設置為 0，表示自己到自己沒有距離
+
+# 螞蟻算法參數
+n_ants = 10
+n_iterations = 100
+alpha = 1  # 信息素重要性
+beta = 2   # 启发函数的重要性
+rho = 0.5  # 信息素蒸發率
+q = 100    # 信息素強度
+
+# 初始化信息素矩陣
+pheromone = np.ones((n_cities, n_cities))
+
+# 計算啟發函數，這裡使用距離的倒數
+heuristic = 1.0 / (distance_matrix + np.eye(n_cities) * np.inf)
+
+# 函數：選擇下一個城市
+def select_next_city(current_city, visited, pheromone, heuristic):
+    probabilities = []
+    for city in range(n_cities):
+        if city not in visited:
+            pheromone_value = pheromone[current_city, city] ** alpha
+            heuristic_value = heuristic[current_city, city] ** beta
+            probabilities.append(pheromone_value * heuristic_value)
+        else:
+            probabilities.append(0)
+    total = sum(probabilities)
+    probabilities = [p / total for p in probabilities]
+    return np.random.choice(range(n_cities), p=probabilities)
+
+# 函數：更新信息素
+def update_pheromone(pheromone, paths, distances, q, rho):
+    pheromone *= (1 - rho)  # 信息素蒸發
+    for path, distance in zip(paths, distances):
+        for i in range(len(path) - 1):
+            pheromone[path[i], path[i + 1]] += q / distance  # 根據路徑長度增加信息素
+
+# 函數：計算路徑長度
+def calculate_path_length(path, distance_matrix):
+    length = 0
+    for i in range(len(path) - 1):
+        length += distance_matrix[path[i], path[i + 1]]
+    length += distance_matrix[path[-1], path[0]]  # 返回起點
+    return length
+
+# 主迴圈
+best_path = None
+best_length = np.inf
+for iteration in range(n_iterations):
+    paths = []
+    lengths = []
+    # 每隻螞蟻生成一個路徑
+    for ant in range(n_ants):
+        visited = [0]  # 假設從城市 0 開始
+        for _ in range(n_cities - 1):
+            next_city = select_next_city(visited[-1], visited, pheromone, heuristic)
+            visited.append(next_city)
+        paths.append(visited)
+        length = calculate_path_length(visited, distance_matrix)
+        lengths.append(length)
+        
+        # 更新最短路徑
+        if length < best_length:
+            best_length = length
+            best_path = visited
+
+    # 更新信息素
+    update_pheromone(pheromone, paths, lengths, q, rho)
+
+    print(f"Iteration {iteration + 1}: Best Path = {best_path}, Length = {best_length}")
+
+# 輸出最短路徑
+print(f"Best Path: {best_path}")
+print(f"Best Length: {best_length}")
 \end{minted}
